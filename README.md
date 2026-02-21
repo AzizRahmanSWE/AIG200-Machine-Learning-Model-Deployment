@@ -5,7 +5,7 @@
 **Name:** Aziz  
 **Live API Endpoint:** `[YOUR_API_BASE_URL]/predict`  
 **API Key:** `[SET VIA ENVIRONMENT VARIABLE]`  
-**GitHub Repository:** [Insert link to your repository]
+**GitHub Repository:** [[Insert link to your repository](https://github.com/AzizRahmanSWE/AIG200-Machine-Learning-Model-Deployment)]
 
 ---
 
@@ -149,4 +149,5 @@ Insert the required evidence screenshots here:
 
 1. **FastAPI Swagger UI / Postman Prediction** showing a successful `200 OK` response from `[YOUR_API_BASE_URL]/docs`
 2. **AWS ECR Repository** showing the pushed Docker image
+
 3. **AWS EC2 Instance** dashboard showing the running `music-classifier-server`
