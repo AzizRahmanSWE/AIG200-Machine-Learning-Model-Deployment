@@ -3,9 +3,9 @@
 ## Final Project Report: Music Genre Classifier API
 
 **Name:** Aziz  
-**Live API Endpoint:** http://3.85.129.174:8080/predict  
-**API Key:** `music-producer-key-2026`  
-**GitHub Repository:** https://github.com/AzizRahmanSWE/AIG200-Machine-Learning-Model-Deployment
+**Live API Endpoint:** `[YOUR_API_BASE_URL]/predict`  
+**API Key:** `[SET VIA ENVIRONMENT VARIABLE]`  
+**GitHub Repository:** [Insert link to your repository]
 
 ---
 
@@ -98,8 +98,8 @@ The current API expects pre-extracted feature vectors. A next iteration will int
 ### Endpoint
 
 - **Method:** `POST`
-- **URL:** `http://3.85.129.174:8080/predict`
-- **Header:** `X-API-Key: music-producer-key-2026`
+- **URL:** `[YOUR_API_BASE_URL]/predict`
+- **Header:** `X-API-Key: <YOUR_API_KEY>`
 - **Body:** JSON with exactly 57 numeric values
 
 ```json
@@ -111,11 +111,16 @@ The current API expects pre-extracted feature vectors. A next iteration will int
 ### Example cURL Request
 
 ```bash
-curl -X POST "http://3.85.129.174:8080/predict" \
+export API_BASE_URL="http://localhost:8080"
+export API_KEY="your_api_key_here"
+
+curl -X POST "$API_BASE_URL/predict" \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: music-producer-key-2026" \
+  -H "X-API-Key: $API_KEY" \
   -d '{"features":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
 ```
+
+Security note: never commit real API keys, cloud credentials, or private endpoints to source control.
 
 ---
 
@@ -142,6 +147,6 @@ curl -X POST "http://3.85.129.174:8080/predict" \
 
 Insert the required evidence screenshots here:
 
-1. **FastAPI Swagger UI / Postman Prediction** showing a successful `200 OK` response from `http://3.85.129.174:8080/docs`
+1. **FastAPI Swagger UI / Postman Prediction** showing a successful `200 OK` response from `[YOUR_API_BASE_URL]/docs`
 2. **AWS ECR Repository** showing the pushed Docker image
 3. **AWS EC2 Instance** dashboard showing the running `music-classifier-server`
