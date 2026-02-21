@@ -1,38 +1,106 @@
-# Machine Learning Model Deployment Assignment
+# AIG 200: Machine Learning Model Deployment
 
-## Project Overview
-This project deploys a pre-trained music genre classifier as a secure REST API.
+## Final Project Report: Music Genre Classifier API
 
-- Framework: FastAPI
-- Artifacts: `music_classifier_pipeline.joblib`, `label_encoder.joblib`
-- Inference rule: model is loaded at app startup (no training during requests)
-- Security: API key required in `X-API-Key` header
+**Name:** Aziz  
+**Live API Endpoint:** http://3.85.129.174:8080/predict  
+**API Key:** `music-producer-key-2026`  
+**GitHub Repository:** https://github.com/AzizRahmanSWE/AIG200-Machine-Learning-Model-Deployment
 
-## Repository Files
-- `main.py` - API service with model loading and prediction endpoint
-- `requirements.txt` - Python dependencies
-- `Dockerfile` - Container build definition
-- `music_classifier_pipeline.joblib` - Trained model pipeline
-- `label_encoder.joblib` - Label encoder for class names
+---
 
-## API Contract
+## 1. Executive Summary
 
-### Health Check
-- Method: `GET`
-- Path: `/health`
-- Response:
+This project delivers a scalable machine learning REST API that predicts the musical genre of an audio track from extracted sonic features. The objective was to operationalize an end-to-end machine learning lifecycle from data analysis to live cloud deployment. Using Scikit-Learn, FastAPI, Docker, and AWS, the final API serves real-time predictions securely and reliably, while strictly avoiding model training during inference.
 
-```json
-{
-  "status": "ok"
-}
-```
+---
 
-### Prediction
-- Method: `POST`
-- Path: `/predict`
-- Header: `X-API-Key: <your_api_key>`
-- Body (JSON):
+## 2. Machine Learning Problem and Dataset
+
+### The Problem
+
+The task is a **multi-class classification** problem: assigning an audio track to one of **10 genre classes** using numerical features (tempo, pitch-related signals, timbre descriptors, and spectral characteristics).
+
+### The Dataset
+
+The model is trained on the **GTZAN Genre Collection** (`features_3_sec.csv` variant), which provides pre-extracted features for 3-second audio slices. Features include:
+
+- MFCC statistics
+- Chroma features
+- Spectral bandwidth
+- Spectral centroid
+- Other frequency-domain descriptors
+
+String identifiers such as filename are excluded so the model learns from the **57 numerical input features** only.
+
+---
+
+## 3. Model Development Process
+
+### Preprocessing
+
+Preprocessing is encapsulated in a Scikit-Learn pipeline so transformations are persisted and consistently applied during inference:
+
+- `StandardScaler` for feature normalization
+- `LabelEncoder` for mapping genre strings to integer class labels
+
+### Training and Evaluation
+
+Two candidate models were evaluated on an 80/20 train-test split:
+
+1. **Random Forest Classifier** (robust with nonlinear relationships, resistant to overfitting)
+2. **Support Vector Machine (RBF kernel)** (effective in high-dimensional spaces)
+
+### Results
+
+- Random Forest Accuracy: **[Insert Colab RF Accuracy]**
+- SVM Accuracy: **[Insert Colab SVM Accuracy]**
+
+The best-performing model was serialized as:
+
+- `music_classifier_pipeline.joblib` (model + preprocessing pipeline)
+- `label_encoder.joblib` (class label mapping)
+
+---
+
+## 4. Deployment Architecture
+
+The API is deployed using a lightweight containerized AWS architecture:
+
+- **Application Layer (FastAPI):** `main.py` exposes a `POST /predict` endpoint. Model artifacts are loaded once at startup for fast inference-only serving. Access is protected with the `X-API-Key` header.
+- **Containerization (Docker):** App code, artifacts, and dependencies are packaged with a minimal `python:3.9-slim` base image.
+- **Cloud Registry (Amazon ECR):** Docker image is pushed to a private ECR repository.
+- **Compute Host (AWS EC2):** A `t3.micro` Amazon Linux 2023 instance pulls and runs the container, exposing port `8080` via a Security Group.
+
+---
+
+## 5. Challenges Faced
+
+The most significant challenge was cloud infrastructure provisioning tied to billing authorization checks.
+
+- **Challenge:** Early deployment attempts on Google Cloud Run and AWS App Runner were blocked due to billing profile restrictions and authorization hold behavior.
+- **Solution:** Deployment architecture pivoted to a manually managed AWS EC2 path. By configuring Docker, IAM permissions for ECR pull, and security rules for port `8080`, the project achieved a stable live endpoint.
+
+---
+
+## 6. Conclusion and Future Improvements
+
+This project successfully bridges local model development and production API serving. The deployed FastAPI container provides secure, low-latency inference from numerical audio descriptors to human-readable genre labels.
+
+### Future Improvements
+
+The current API expects pre-extracted feature vectors. A next iteration will integrate audio feature extraction (e.g., `librosa`) inside the container so users can submit raw `.wav` or `.mp3` files directly. Future responses could include predicted genre, BPM, and key for producer-facing workflows.
+
+---
+
+## API Usage
+
+### Endpoint
+
+- **Method:** `POST`
+- **URL:** `http://3.85.129.174:8080/predict`
+- **Header:** `X-API-Key: music-producer-key-2026`
+- **Body:** JSON with exactly 57 numeric values
 
 ```json
 {
@@ -40,73 +108,40 @@ This project deploys a pre-trained music genre classifier as a secure REST API.
 }
 ```
 
-The request must include exactly `57` numeric features.
-
-## Local Run (without Docker)
+### Example cURL Request
 
 ```bash
-pip install -r requirements.txt
+curl -X POST "http://3.85.129.174:8080/predict" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: music-producer-key-2026" \
+  -d '{"features":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
 ```
 
-Set API key environment variable:
+---
 
-PowerShell:
+## Repository Structure
 
-```powershell
-$env:API_KEY = "music-producer-key-2026"
-uvicorn main:app --host 0.0.0.0 --port 8080
-```
+- `main.py` - FastAPI application and inference endpoint
+- `requirements.txt` - Python dependencies
+- `Dockerfile` - Container build instructions
+- `music_classifier_pipeline.joblib` - Trained pipeline artifact
+- `label_encoder.joblib` - Genre label encoder
 
-Test request:
+---
 
-```powershell
-Invoke-RestMethod -Method Post -Uri "http://localhost:8080/predict" `
-  -Headers @{"X-API-Key"="music-producer-key-2026"} `
-  -ContentType "application/json" `
-  -Body '{"features":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}'
-```
+## Assignment Compliance Notes
 
-## Docker Run
+- No training occurs inside the inference endpoint.
+- Artifacts are loaded on startup using `joblib`.
+- API is protected with an API key header.
+- Deployed as a Dockerized backend service on AWS infrastructure.
 
-Build image:
+---
 
-```bash
-docker build -t music-genre-api .
-```
+## Appendix: Deployment Screenshots
 
-Run container:
+Insert the required evidence screenshots here:
 
-```bash
-docker run -p 8080:8080 -e API_KEY="music-producer-key-2026" music-genre-api
-```
-
-## Cloud Deployment (Google Cloud Run Example)
-
-```bash
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/music-genre-api
-gcloud run deploy music-genre-api \
-  --image gcr.io/YOUR_PROJECT_ID/music-genre-api \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars API_KEY=music-producer-key-2026
-```
-
-Use the returned service URL as your **Live API Endpoint**.
-
-## Evidence for Report (Screenshots Required)
-Capture screenshots of:
-
-1. Local API test success (`/predict` response).
-2. Docker container running (`docker ps` and logs).
-3. Cloud Run deployed service details page.
-4. Successful cloud endpoint prediction request.
-5. Cloud logs showing received requests.
-
-## Notes for Assignment Compliance
-- No model training occurs inside `/predict`.
-- Model artifacts are loaded at startup using `joblib.load`.
-- Direct API access is used (no Streamlit/Gradio).
-- Endpoint secured using API key in request headers.
+1. **FastAPI Swagger UI / Postman Prediction** showing a successful `200 OK` response from `http://3.85.129.174:8080/docs`
+2. **AWS ECR Repository** showing the pushed Docker image
+3. **AWS EC2 Instance** dashboard showing the running `music-classifier-server`
